@@ -2,25 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#define MAX_PALAVRA 50
-#define MAX_TAMANHO_FILA 100
-#define MAX_TAMANHO_PALAVRA 10
+#include "forca.h"
 
 typedef struct no {
     char letra;
     struct no* prox;
 } No;
-
-typedef struct {
-    No* inicio;
-    No* fim;
-} Fila;
-
-typedef struct {
-    char palavra[MAX_PALAVRA];
-    int tamanho;
-} Palavra;
 
 void inicializar_fila(Fila* fila) {
     fila->inicio = NULL;
@@ -115,15 +102,50 @@ int escolher_nivel() {
     return opcao;
 }
 
+void enfileirar(Fila* fila, char letra) {
+    if (tamanho_da_fila(fila) < MAX_TAMANHO_FILA) {
+        inserir_na_fila(fila, letra);
+    } else {
+        printf("Fila cheia.\n");
+    }
+}
+
+int verificar_letra_na_palavra(Palavra* palavra, char letra) {
+    for (int i = 0; i < tamanho_da_palavra(palavra); i++) {
+        if (palavra->palavra[i] == letra) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int verificar_palavra_descoberta(Palavra* palavra, Fila* letras_digitadas) {
+    for (int i = 0; i < tamanho_da_palavra(palavra); i++) {
+        int letra_encontrada = 0;
+        No* no_atual = letras_digitadas->inicio;
+        while (no_atual != NULL) {
+            if (palavra->palavra[i] == no_atual->letra) {
+                letra_encontrada = 1;
+                break;
+            }
+            no_atual = no_atual->prox;
+        }
+        if (!letra_encontrada) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 void jogar() {
     int nivel = escolher_nivel();
     FILE* arquivo;
     if (nivel == 1) {
-        arquivo = fopen("facil.txt", "r");
+        arquivo = fopen("arquivTxt/facil.txt", "r");
     } else if (nivel == 2) {
-        arquivo = fopen("medio.txt", "r");
+        arquivo = fopen("arquivTxt/medio.txt", "r");
     } else if (nivel == 3) {
-        arquivo = fopen("dificil.txt", "r");
+        arquivo = fopen("arquivTxt/dificil.txt", "r");
     } else {
         printf("Opcao invalida.\n");
         return;
@@ -193,31 +215,26 @@ void jogar() {
         int letra_repetida = 0;
         while (no_atual != NULL) {
             if (no_atual->letra == letra) {
-            printf("Voce ja digitou essa letra.\n");
-            letra_repetida = 1;
-            break;
+                printf("Voce ja digitou essa letra.\n");
+                letra_repetida = 1;
+                break;
+            }
+            no_atual = no_atual->prox;
         }
-        no_atual = no_atual->prox;
+        if (letra_repetida) {
+            continue;
+        }
+        enfileirar(&letras_digitadas, letra);
+        if (!verificar_letra_na_palavra(&palavra_secreta, letra)) {
+            printf("A palavra nao tem a letra %c.\n", letra);
+            erros++;
+        } else {
+            printf("A palavra tem a letra %c.\n", letra);
+        }
+        if (verificar_palavra_descoberta(&palavra_secreta, &letras_digitadas)) {
+            printf("Parabens, voce acertou!\n");
+            return;
+        }
     }
-    if (letra_repetida) {
-        continue;
-    }
-    enfileirar(&letras_digitadas, letra);
-    if (!verificar_letra_na_palavra(letra, &palavra_secreta)) {
-        printf("A palavra nao tem a letra %c.\n", letra);
-        erros++;
-    } else {
-        printf("A palavra tem a letra %c.\n", letra);
-    }
-    if (verificar_palavra_descoberta(&letras_digitadas, &palavra_secreta)) {
-        printf("Parabens, voce acertou!\n");
-        return;
-    }
-}
-printf("Que pena, voce perdeu. A palavra era: %s\n", palavra_secreta.palavra);
-}
-
-int main() {
-    jogar();
-return 0;
+    printf("Que pena, voce perdeu. A palavra era: %s\n", palavra_secreta.palavra);
 }
