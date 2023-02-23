@@ -102,6 +102,11 @@ int escolher_nivel() {
     return opcao;
 }
 
+/*
+    as próximas 3 funções não tinham no original,
+    então eu (wendel) adicionei, mas não tenho certeza
+    se estão corretas.
+*/
 void enfileirar(Fila* fila, char letra) {
     if (tamanho_da_fila(fila) < MAX_TAMANHO_FILA) {
         inserir_na_fila(fila, letra);
